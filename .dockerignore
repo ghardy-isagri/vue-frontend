@@ -1,0 +1,39 @@
+# Node.js dependencies
+node_modules
+# Ignore the entire node_modules folder as it will be installed in the container
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Output directories
+dist
+build
+
+# Local environment files
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+yarn.lock
+
+# Optional npm cache
+.npm
+
+# MacOS files
+.DS_Store
+
+# Git-related files
+.git
+.gitignore
+
+# IDEs/Editors
+.vscode
+.idea
+*.sublime-project
+*.sublime-workspace
+
+# Docker files
+Dockerfile
+.dockerignore
