@@ -15,5 +15,5 @@ Vue 3 + TypeScript + Apollo Client
 - npm/yarn
 
 ## Getting Started
-npm i |npm vite
+```npm i | npm vite```
 
