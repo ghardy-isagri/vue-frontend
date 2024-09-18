@@ -12,7 +12,9 @@ Vue 3 + TypeScript + Apollo Client
 ## Prerequisites
 
 - Node.js (v18 or later)
-- npm or yarn
+- npm/yarn
 
 ## Getting Started
+npm i 
+npm vite
 
