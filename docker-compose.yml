@@ -1,21 +1,14 @@
-version: '3'
+version: "3"
 services:
   vue-app:
-    watch:
-    - action: sync
-    path: ./src
-    target: /src
-    ignore:
-    - node_modules/
-    - action: rebuild 
     image: node:16-alpine
     container_name: vue-app
     working_dir: /app
     volumes:
       - ./:/app
-      - /app/node_modules # To avoid reinstalling node_modules on every run
+      - /app/node_modules
     ports:
-      - "3000:3000"
+      - 3000:3000
     environment:
       - NODE_ENV=development
     command: sh -c "npm install && npm run dev"

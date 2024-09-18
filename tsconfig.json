@@ -5,9 +5,11 @@
     "lib": ["DOM", "ESNext"],
     "baseUrl": ".",
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "Node",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+       "./*"
+      ]
     },
     "resolveJsonModule": true,
     "types": [

@@ -28,28 +28,7 @@
             rounded="lg"
             variant="outlined"
           >
-            <item-list />
-            <template #image>
-              <v-img position="top right" />
-            </template>
-
-            <template #title>
-              <h2 class="text-h5 font-weight-bold">Get started</h2>
-            </template>
-
-            <template #subtitle>
-              <div class="text-subtitle-1">
-                Replace this page by test <v-kbd>{{ `<HelloWorld />` }}</v-kbd> in <v-kbd>pages/index.vue</v-kbd>.
-              </div>
-            </template>
-
-            <v-overlay
-              contained
-              model-value
-              opacity=".12"
-              persistent
-              scrim="primary"
-            />
+            <fixed-asset-list />
           </v-card>
         </v-col>
 
