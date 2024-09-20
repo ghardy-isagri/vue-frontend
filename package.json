@@ -2,7 +2,7 @@
   "name": "vuetify-project",
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
+    "start": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "serve": "vue-cli-service serve --host localhost",
     "preview": "vite preview",
@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@apollo/client": "^3.11.8",
+    "@cypress/vite-dev-server": "^5.2.0",
+    "@cypress/vue": "^6.0.1",
     "@mdi/font": "7.4.47",
     "@vue/apollo-composable": "^4.2.1",
     "@vue/cli": "^5.0.8",
@@ -17,6 +19,7 @@
     "apollo-client": "^2.6.10",
     "axios": "^1.7.7",
     "core-js": "^3.37.1",
+    "date-fns": "^4.1.0",
     "graphql": "^15.9.0",
     "roboto-fontface": "*",
     "vue": "^3.5.6",

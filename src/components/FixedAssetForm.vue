@@ -1,214 +1,305 @@
 <template>
-  <div>
-    <h2>Create or Update Fixed Asset</h2>
+  <v-container>
+    <v-card class="pa-5" elevation="5">
+      <v-card-title class="headline">{{ formTitle }}</v-card-title>
 
-    <!-- Form to input Fixed Asset data -->
-    <form @submit.prevent="submitForm">
-      <!-- Name Field -->
-      <div class="form-group">
-        <label for="name">Asset Name:</label>
-        <input
-          id="name"
-          v-model="fixedAsset.name"
-          placeholder="Enter asset name"
-          required
-          type="text"
-        >
-      </div>
+      <v-form ref="form" v-model="formValid">
+        <v-row>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="formData.name"
+              label="Name"
+              required
+              :rules="[rules.required]"
+            />
+          </v-col>
 
-      <!-- Account ID -->
-      <div class="form-group">
-        <label for="accountId">Account ID:</label>
-        <input
-          id="accountId"
-          v-model="fixedAsset.accountId"
-          placeholder="Enter account ID"
-          required
-          type="number"
-        >
-      </div>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="formData.accountId"
+              label="Account ID"
+              required
+              :rules="[rules.required, rules.number]"
+              type="number"
+            />
+          </v-col>
 
-      <!-- Number -->
-      <div class="form-group">
-        <label for="number">Number:</label>
-        <input
-          id="number"
-          v-model="fixedAsset.number"
-          placeholder="Enter asset number"
-          required
-          type="number"
-        >
-      </div>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="formData.number"
+              label="Asset Number"
+              required
+              :rules="[rules.required, rules.number]"
+              type="number"
+            />
+          </v-col>
 
-      <!-- Asset Type -->
-      <div class="form-group">
-        <label for="type">Asset Type:</label>
-        <select id="type" v-model="fixedAsset.type" required>
-          <option v-for="type in assetTypes" :key="type.value" :value="type.value">
-            {{ type.text }}
-          </option>
-        </select>
-      </div>
+          <v-col cols="12" md="6">
+            <v-select
+              v-model="formData.type"
+              item-title="text"
+              item-value="value"
+              :items="assetTypes"
+              label="Asset Type"
+              required
+              :rules="[rules.required]"
+            />
+          </v-col>
 
-      <!-- Acquisition Type -->
-      <div class="form-group">
-        <label for="acquisitionType">Acquisition Type:</label>
-        <select id="acquisitionType" v-model="fixedAsset.acquisitionType" required>
-          <option v-for="type in acquisitionTypes" :key="type.value" :value="type.value">
-            {{ type.text }}
-          </option>
-        </select>
-      </div>
+          <v-col cols="12" md="6">
+            <v-select
+              v-model="formData.acquisitionType"
+              item-title="text"
+              item-value="value"
+              :items="acquisitionTypes"
+              label="Acquisition Type"
+              required
+              :rules="[rules.required]"
+            />
+          </v-col>
 
-      <!-- Acquisition Date -->
-      <div class="form-group">
-        <label for="acquisitionDate">Acquisition Date:</label>
-        <input id="acquisitionDate" v-model="fixedAsset.acquisitionDate" required type="date">
-      </div>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="formData.acquisitionDate"
+              label="Acquisition Date"
+              required
+              :rules="[rules.required]"
+              type="date"
+            />
+          </v-col>
 
-      <!-- Acquisition Amount -->
-      <div class="form-group">
-        <label for="acquisitionAmount">Acquisition Amount:</label>
-        <input
-          id="acquisitionAmount"
-          v-model="fixedAsset.acquisitionAmount"
-          placeholder="Enter acquisition amount"
-          required
-          type="number"
-        >
-      </div>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="formData.acquisitionAmount"
+              label="Acquisition Amount"
+              required
+              :rules="[rules.required, rules.number]"
+              type="number"
+            />
+          </v-col>
 
-      <!-- VAT Amount -->
-      <div class="form-group">
-        <label for="vatAmount">VAT Amount:</label>
-        <input id="vatAmount" v-model="fixedAsset.vatAmount" placeholder="Enter VAT amount" type="number">
-      </div>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="formData.vatAmount"
+              label="VAT Amount"
+              required
+              :rules="[rules.required, rules.number]"
+              type="number"
+            />
+          </v-col>
 
-      <!-- Comments -->
-      <div class="form-group">
-        <label for="comments">Comments:</label>
-        <textarea id="comments" v-model="fixedAsset.comments" placeholder="Enter comments (optional)" />
-      </div>
+          <v-col cols="12">
+            <v-textarea
+              v-model="formData.comments"
+              label="Comments"
+              :rows="3"
+            />
+          </v-col>
+        </v-row>
 
-      <!-- Submit Button -->
-      <div class="form-group">
-        <button type="submit">Submit</button>
-      </div>
-    </form>
-  </div>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="primary" :disabled="!formValid" @click="submitForm">
+            Submit
+          </v-btn>
+          <v-btn color="secondary" @click="resetForm">
+            Reset
+          </v-btn>
+        </v-card-actions>
+      </v-form>
+    </v-card>
+  </v-container>
+
 </template>
 
 <script lang="ts">
-  import { ref } from 'vue'
-  import { useMutation } from '@vue/apollo-composable'
+  import { defineComponent, reactive, ref, watch } from 'vue'
+  import { provideApolloClient, useMutation } from '@vue/apollo-composable'
   import gql from 'graphql-tag'
+  import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core'
 
-  // Mutation for creating a fixed asset
-  const CREATE_FIXED_ASSET = gql`
-  mutation CreateFixedAsset($data: CreateFixedAssetInput!) {
-    createFixedAsset(data: $data) {
-      id
-      name
-      acquisitionAmount
-    }
-  }
-`
+  // Apollo setup
+  const httpLink = new HttpLink({
+    uri: 'http://localhost:9090/', // Replace with your GraphQL server URL
+  })
+  const cache = new InMemoryCache()
+  const apolloClient = new ApolloClient({
+    link: httpLink,
+    cache,
+  })
+  provideApolloClient(apolloClient)
 
-  export default {
-    setup () {
-      // Reactive form data for FixedAsset
-      const fixedAsset = ref({
+  export default defineComponent({
+    name: 'FixedAssetForm',
+    props: {
+      fixedAsset: {
+        type: Object,
+        default: () => null,
+      },
+    },
+    emits: ['close'],
+    setup (props, { emit }) {
+      const formValid = ref(false)
+      const returnedFixedAsset = ref('')
+      const formData = reactive({
+        id: '',
         name: '',
-        accountId: 0,
-        number: 1,
+        accountId: '',
+        number: '',
         type: null,
-        acquisitionType: 0,
+        acquisitionType: null,
         acquisitionDate: '',
-        acquisitionAmount: 0,
-        vatAmount: 0,
+        acquisitionAmount: '',
+        vatAmount: '',
         comments: '',
       })
 
-      // Asset Type options
+      // Watch for changes in the passed prop (fixedAsset) and populate form fields
+      watch(
+        () => props.fixedAsset,
+        newAsset => {
+          if (newAsset) {
+            Object.assign(formData, newAsset)
+          }
+        },
+        { immediate: true }
+      )
+
+      // Set form title based on whether we're editing or creating
+      const formTitle = ref(props.fixedAsset ? 'Edit Fixed Asset' : 'Create Fixed Asset')
+
+      // Asset types and acquisition types
       const assetTypes = [
-        { text: 'Autres', value: 0 },
-        { text: 'Bâtiments', value: 1 },
-        { text: 'Matériels', value: 2 },
-        { text: 'Parts', value: 3 },
-        { text: 'Prêts, Dépôts, Cautions', value: 4 },
+        { text: 'Autres', value: 'AUTRES' },
+        { text: 'Bâtiments', value: 'BATIMENTS' },
+        { text: 'Matériels', value: 'MATERIELS' },
+        { text: 'Parts', value: 'PARTS' },
+        { text: 'Prêts, Dépôts, Cautions', value: 'PRETS_DEPOTS_CAUTIONS' },
       ]
 
-      // Acquisition Type options
       const acquisitionTypes = [
-        { text: 'Cash', value: 0 },
-        { text: 'Credit', value: 1 },
-        { text: 'Lease', value: 2 },
+        { text: 'Cash', value: 'CASH' },
+        { text: 'Credit', value: 'CREDIT' },
+        { text: 'Lease', value: 'LEASE' },
       ]
 
-      // Mutation hook for creating a fixed asset
-      const { mutate: createFixedAsset } = useMutation(CREATE_FIXED_ASSET)
+      const rules = {
+        required: (v: string) => !!v || 'This field is required',
+        number: (v: string) => !isNaN(parseFloat(v)) || 'Must be a number',
+      }
 
-      // Function to submit the form
-      const submitForm = async () => {
-        try {
-          // Call the mutation and pass form data as variables
-          await createFixedAsset({
-            variables: {
-              data: {
-                ...fixedAsset.value,
-                acquisitionAmount: parseFloat(fixedAsset.value.acquisitionAmount.toString()), // Ensure it's a number
-                vatAmount: parseFloat(fixedAsset.value.vatAmount.toString()), // Ensure it's a number
-              },
-            },
-          })
-          alert('Fixed Asset created successfully!')
-        } catch (error) {
-          console.error('Error creating Fixed Asset:', error)
-          alert('Failed to create Fixed Asset.')
+      const CREATE_FIXED_ASSET_MUTATION = gql`
+      mutation CreateFixedAsset($data: CreateFixedAssetInput!) {
+        createFixedAsset(data: $data) {
+      id
+      name
+      accountId
+      number
+      type
+      acquisitionType
+      acquisitionDate
+      acquisitionAmount
+      vatAmount
+      comments
+        }
+      }
+    `
+
+      const UPDATE_FIXED_ASSET_MUTATION = gql`
+      mutation UpdateFixedAsset($data: UpdateFixedAssetInput!) {
+        updateFixedAsset(data: $data) {
+      id
+      name
+      accountId
+      number
+      type
+      acquisitionType
+      acquisitionDate
+      acquisitionAmount
+      vatAmount
+      comments
+        }
+      }
+    `
+
+      const { mutate: createFixedAsset } = useMutation(CREATE_FIXED_ASSET_MUTATION)
+      const { mutate: updateFixedAsset } = useMutation(UPDATE_FIXED_ASSET_MUTATION)
+
+      // Submit form
+      const submitForm = () => {
+        if (formValid.value) {
+          const formattedData = {
+            ...formData,
+            accountId: parseInt(formData.accountId, 10),
+            number: parseInt(formData.number, 10),
+            acquisitionDate: new Date(formData.acquisitionDate),
+            acquisitionAmount: parseFloat(formData.acquisitionAmount),
+            vatAmount: parseFloat(formData.vatAmount),
+          }
+
+          if (formData.id) {
+            // Update asset
+            updateFixedAsset({
+              data: formattedData,
+            })
+              .then(response => {
+                returnedFixedAsset.value = `Asset updated: ${response?.data.updateFixedAsset.name}`
+                emit('close')
+                resetForm()
+              })
+              .catch(error => {
+                console.error('Error updating Fixed Asset:', error)
+              })
+          } else {
+            // Create new asset
+            createFixedAsset({
+              data: formattedData,
+            })
+              .then(response => {
+                returnedFixedAsset.value = `Asset created: ${response?.data.createFixedAsset.name}`
+                emit('close')
+                resetForm()
+              })
+              .catch(error => {
+                console.error('Error creating Fixed Asset:', error)
+              })
+          }
         }
       }
 
+      const resetForm = () => {
+        Object.assign(formData, {
+          name: '',
+          accountId: '',
+          number: '',
+          type: null,
+          acquisitionType: null,
+          acquisitionDate: '',
+          acquisitionAmount: '',
+          vatAmount: '',
+          comments: '',
+        })
+      }
+
       return {
-        fixedAsset,
+        formValid,
+        returnedFixedAsset,
+        formData,
         assetTypes,
         acquisitionTypes,
+        rules,
         submitForm,
+        resetForm,
+        formTitle,
       }
     },
-  }
+  })
 </script>
 
 <style scoped>
-.form-group {
-  margin-bottom: 1rem;
-}
-
-label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-
-input,
-select,
-textarea {
-  width: 100%;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-button {
-  padding: 0.5rem 1rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #0056b3;
+/* Customize dialog width */
+.v-dialog__content {
+  max-width: 75%;
+  margin: auto;
 }
 </style>
