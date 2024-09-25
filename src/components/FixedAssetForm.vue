@@ -57,7 +57,6 @@
               :rules="[rules.required]"
             />
           </v-col>
-
           <v-col cols="12" md="6">
             <v-text-field
               v-model="formData.acquisitionDate"
@@ -65,8 +64,7 @@
               required
               :rules="[rules.required]"
               type="date"
-            />
-          </v-col>
+            /> </v-col>
 
           <v-col cols="12" md="6">
             <v-text-field
@@ -109,7 +107,6 @@
       </v-form>
     </v-card>
   </v-container>
-
 </template>
 
 <script lang="ts">
@@ -118,7 +115,6 @@
   import gql from 'graphql-tag'
   import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core'
 
-  // Apollo setup
   const httpLink = new HttpLink({
     uri: 'http://localhost:9090/', // Replace with your GraphQL server URL
   })
@@ -141,6 +137,7 @@
     setup (props, { emit }) {
       const formValid = ref(false)
       const returnedFixedAsset = ref('')
+
       const formData = reactive({
         id: '',
         name: '',
@@ -148,13 +145,12 @@
         number: '',
         type: null,
         acquisitionType: null,
-        acquisitionDate: '',
+        acquisitionDate: '', // Store as a Unix timestamp
         acquisitionAmount: '',
         vatAmount: '',
         comments: '',
       })
 
-      // Watch for changes in the passed prop (fixedAsset) and populate form fields
       watch(
         () => props.fixedAsset,
         newAsset => {
@@ -165,10 +161,8 @@
         { immediate: true }
       )
 
-      // Set form title based on whether we're editing or creating
       const formTitle = ref(props.fixedAsset ? 'Edit Fixed Asset' : 'Create Fixed Asset')
 
-      // Asset types and acquisition types
       const assetTypes = [
         { text: 'Autres', value: 'AUTRES' },
         { text: 'Bâtiments', value: 'BATIMENTS' },
@@ -189,59 +183,57 @@
       }
 
       const CREATE_FIXED_ASSET_MUTATION = gql`
-      mutation CreateFixedAsset($data: CreateFixedAssetInput!) {
-        createFixedAsset(data: $data) {
-      id
-      name
-      accountId
-      number
-      type
-      acquisitionType
-      acquisitionDate
-      acquisitionAmount
-      vatAmount
-      comments
+        mutation CreateFixedAsset($data: CreateFixedAssetInput!) {
+          createFixedAsset(data: $data) {
+            id
+            name
+            accountId
+            number
+            type
+            acquisitionType
+            acquisitionDate
+            acquisitionAmount
+            vatAmount
+            comments
+          }
         }
-      }
-    `
+      `
 
       const UPDATE_FIXED_ASSET_MUTATION = gql`
-      mutation UpdateFixedAsset($data: UpdateFixedAssetInput!) {
-        updateFixedAsset(data: $data) {
-      id
-      name
-      accountId
-      number
-      type
-      acquisitionType
-      acquisitionDate
-      acquisitionAmount
-      vatAmount
-      comments
+        mutation UpdateFixedAsset($data: UpdateFixedAssetInput!) {
+          updateFixedAsset(data: $data) {
+            id
+            name
+            accountId
+            number
+            type
+            acquisitionType
+            acquisitionDate
+            acquisitionAmount
+            vatAmount
+            comments
+          }
         }
-      }
-    `
+      `
 
       const { mutate: createFixedAsset } = useMutation(CREATE_FIXED_ASSET_MUTATION)
       const { mutate: updateFixedAsset } = useMutation(UPDATE_FIXED_ASSET_MUTATION)
-
-      // Submit form
       const submitForm = () => {
+        console.log(formData.acquisitionDate)
         if (formValid.value) {
           const formattedData = {
             ...formData,
+            acquisitionDate: formData.acquisitionDate
+              ? new Date(formData.acquisitionDate).toISOString() // Convert to ISO string format
+              : undefined, // Ensure undefined if no date is provided
             accountId: parseInt(formData.accountId, 10),
             number: parseInt(formData.number, 10),
-            acquisitionDate: new Date(formData.acquisitionDate),
             acquisitionAmount: parseFloat(formData.acquisitionAmount),
             vatAmount: parseFloat(formData.vatAmount),
           }
 
           if (formData.id) {
-            // Update asset
-            updateFixedAsset({
-              data: formattedData,
-            })
+            updateFixedAsset({ data: formattedData })
               .then(response => {
                 returnedFixedAsset.value = `Asset updated: ${response?.data.updateFixedAsset.name}`
                 emit('close')
@@ -251,10 +243,11 @@
                 console.error('Error updating Fixed Asset:', error)
               })
           } else {
-            // Create new asset
-            createFixedAsset({
-              data: formattedData,
-            })
+            // Remove the `id` field before sending the data for creation
+            const { id, ...createData } = formattedData
+
+            // If there is no id, perform a create
+            createFixedAsset({ data: createData })
               .then(response => {
                 returnedFixedAsset.value = `Asset created: ${response?.data.createFixedAsset.name}`
                 emit('close')
@@ -269,6 +262,7 @@
 
       const resetForm = () => {
         Object.assign(formData, {
+          id: '',
           name: '',
           accountId: '',
           number: '',
@@ -297,7 +291,6 @@
 </script>
 
 <style scoped>
-/* Customize dialog width */
 .v-dialog__content {
   max-width: 75%;
   margin: auto;

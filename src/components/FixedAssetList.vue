@@ -70,13 +70,11 @@
     <v-snackbar
       v-model="snackbar"
       color="deep-purple-accent-4"
-      elevation="24"
       rounded="pill"
       :timeout="2000"
       vertical
     >
-      <div class="text-subtitle-1 pb-2">Fixed Asset created or updated!</div>
-      <p>{{ selectedAsset }}</p>
+      <div class="text-subtitle-1 text-center pb-2">Fixed Asset created or updated!</div>
       <template #actions>
         <v-btn color="green" variant="text" @click="snackbar = false">
           Close

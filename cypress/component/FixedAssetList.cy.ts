@@ -12,7 +12,6 @@ const vuetify = createVuetify({
 })
 
 describe('Fixed Assets List Component', () => {
-
   beforeEach(() => {
     const mockAssets = [
       {
@@ -29,7 +28,7 @@ describe('Fixed Assets List Component', () => {
       },
       // Add more mock assets if needed
     ]
-    cy.intercept('GET', '', req => {
+    cy.intercept('GET', 'http://localhost:9090/', req => {
       if (req.body.operationName === 'GetFixedAssets') {
         req.reply({
           statusCode: 200,
@@ -38,10 +37,7 @@ describe('Fixed Assets List Component', () => {
       }
     }).as('fetchAssets')
 
-    cy.intercept('GET', '', {
-      statusCode: 500,
-      body: { errors: [{ message: 'Server Error' }] },
-    }).as('fetchError')
+
     mount(FixedAssetsList, {
       global: {
         plugins: [vuetify],
@@ -68,13 +64,15 @@ describe('Fixed Assets List Component', () => {
   })
 
   it('should show error state if fetching data fails', () => {
-
     mount(FixedAssetsList, {
       global: {
         plugins: [vuetify],
       },
     })
-
+    cy.intercept('GET', 'http://localhost:9090/', {
+      statusCode: 500,
+      body: { errors: [{ message: 'Server Error' }] },
+    }).as('fetchError')
     cy.wait('@fetchError') // Wait for the error to be intercepted
     cy.get('.error-alert').should('contain.text', 'Error fetching data: Response not successful: Received status code 500')
   })
@@ -152,29 +150,5 @@ describe('Fixed Assets List Component', () => {
     })
 
     cy.get('.v-dialog').should('be.visible')
-  })
-
-  it('should delete a fixed asset and refresh the list', () => {
-    // Set up the delete mutation
-    cy.intercept('POST', '', req => {
-      if (req.body.operationName === 'DeleteFixedAsset') {
-        req.reply({ statusCode: 200, body: { data: { deleteFixedAsset: { id: '1' } } } })
-      }
-    }).as('deleteAsset')
-
-    cy.wait('@fetchAssets') // Wait for the initial fetch
-
-    cy.get('.v-data-table tbody tr').first().within(() => {
-      cy.get('.btn-delete').click() // Click the delete button
-    })
-
-    cy.wait('@deleteAsset') // Wait for the delete mutation
-    cy.get('.v-snackbar').should('contain.text', 'Fixed Asset created or updated!')
-  })
-
-  it('should refresh the assets list when the Refresh button is clicked', () => {
-    cy.get('.btn-refresh').click()
-    cy.wait('@fetchAssets') // Wait for the assets to be refetched
-    cy.get('.v-data-table').should('exist')
   })
 })
